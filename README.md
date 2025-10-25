@@ -1,51 +1,80 @@
-# 🛒 E-commerce Funnel Analysis
+# Funnel Analysis for E-commerce Platform
 
-## 📌 Overview
-The goal of this project is to analyze the **user journey funnel** of an e-commerce website and identify key stages where users drop off.  
-A funnel typically consists of stages such as **Home → Search → Payment → Confirmation**. At each step, users may abandon the site. The goal of this project is to perform Funnel Analysis on an e-commerce website’s user journey to identify where customers drop off, calculate conversion rates at each stage, and provide actionable business insights to improve overall conversions. 
-Understanding these drop-offs is crucial for:  
-- Optimizing user experience (UX)  
-- Improving conversion rates  
-- Identifying technical or design issues  
+## Project Overview
 
----
+This project simulates a real-world product analytics scenario: diagnosing sudden conversion drops in an e-commerce funnel. We analyze ~90,400 user interactions to identify critical drop-offs along the user journey (Home → Search → Payment → Confirmation), segment behavior by device and gender, and propose actionable product and UX improvements.
 
-## 📊 Dataset
-The analysis uses **~90,400 user interactions** across 5 CSVs:
-- `user_table.csv` → user_id, date, device, sex  
-- `home_page_table.csv` → users who visited homepage  
-- `search_page_table.csv` → users who searched  
-- `payment_page_table.csv` → users who reached payment  
-- `payment_confirmation_table.csv` → users who completed purchase  
+**Key Business Question:** Why are only a small fraction of users completing purchases, and what interventions can improve conversions?
 
----
+## Hypothesis
 
-##  Funnel Analysis in Python
-Tools: **Python (Pandas, Matplotlib, Plotly)**  
+* Primary Hypothesis: Conversion rates dropped due to checkout friction on Desktop devices and a March 1st outage affecting payments.
+* Secondary Hypotheses:
 
-### 🔹 Stage Counts
-| Stage          | Users   |
-|----------------|---------|
-| Home Page      | 90,400  |
-| Search Page    | 45,200  |
-| Payment Page   | 6,030   |
-| Confirmation   | 452     |
+  * Gender has minimal impact on funnel drop-offs.
+  * Mobile users perform better than Desktop due to optimized UX.
 
-### 🔹 Conversion Rates
-- Home → Search: **50%**  
-- Search → Payment: **13.34%**  
-- Payment → Confirmation: **7.50%**  
-- Overall Funnel Conversion: **0.5%**  
+## Dataset & Tools
 
-### 🔹 Funnel Visualization
-*(Generated using Plotly)*  
+| Dataset                          | Description                |
+| -------------------------------- | -------------------------- |
+| `user_table.csv`                 | user_id, date, device, sex |
+| `home_page_table.csv`            | users visiting homepage    |
+| `search_page_table.csv`          | users performing search    |
+| `payment_page_table.csv`         | users reaching payment     |
+| `payment_confirmation_table.csv` | users completing purchase  |
 
-![Funnel Chart](<img width="1699" height="526" alt="image" src="https://github.com/user-attachments/assets/6d8f1630-d1f5-47bd-924a-08d5ccdaad89" />
-)  
+**Tools & Libraries:** Python (Pandas, Plotly, Matplotlib), SQL (MS SQL Server), Jupyter Notebook
+**Concepts Applied:** Funnel Metrics, Conversion Analysis, Segmentation, Time Trend Analysis, Product Hypothesis Testing
 
----
+## Methodology
 
-### 🔹 Key Queries
+### 1. Data Preparation
+
+* Merged CSV files to create end-to-end user journeys.
+* Removed duplicate user IDs.
+* Verified funnel stage integrity (Home → Search → Payment → Confirmation).
+
+### 2. Funnel Analysis
+
+**Stage-wise Users & Conversion Rates:**
+
+| Stage                     | Users           | Conversion Rate |
+| ------------------------- | --------------- | --------------- |
+| Home → Search             | 90,400 → 45,200 | 50%             |
+| Search → Payment          | 45,200 → 6,030  | 13.34%          |
+| Payment → Confirmation    | 6,030 → 452     | 7.50%           |
+| Overall Funnel Conversion | 90,400 → 452    | 0.5%            |
+
+* Largest drop-offs occur at Search → Payment (86.7%) and Payment → Confirmation (92.5%).
+
+### 3. Time-Based Trend
+
+* Plotted monthly conversion rates.
+* March 1st anomaly: sudden funnel-wide drop → likely due to technical bug / release issue.
+
+### 4. Segmentation Analysis
+
+#### By Gender
+
+| Gender | Conversion Rate |
+| ------ | --------------- |
+| Female | 0.53%           |
+| Male   | 0.47%           |
+
+**Insight:** Gender does not significantly affect conversions.
+
+#### By Device
+
+| Device  | Users  | Conversion Rate |
+| ------- | ------ | --------------- |
+| Desktop | 60,000 | 0.25%           |
+| Mobile  | 30,400 | 1.00%           |
+
+**Insight:** Mobile converts 4× better than Desktop; Desktop users drop off mainly at checkout & confirmation stages.
+
+### 5. SQL Queries (Representative)
+
 ```sql
 -- Count distinct users at each stage
 SELECT COUNT(DISTINCT user_id) AS home_users FROM home_page_table;
@@ -53,99 +82,41 @@ SELECT COUNT(DISTINCT user_id) AS search_users FROM search_page_table;
 SELECT COUNT(DISTINCT user_id) AS payment_users FROM payment_page_table;
 SELECT COUNT(DISTINCT user_id) AS confirm_users FROM payment_confirmation_table;
 
--- Conversion: Home → Search
-SELECT 
-    CAST(COUNT(DISTINCT s.user_id) AS FLOAT) / COUNT(DISTINCT h.user_id) * 100 AS home_to_search_rate
+-- Conversion Home → Search
+SELECT CAST(COUNT(DISTINCT s.user_id) AS FLOAT)/COUNT(DISTINCT h.user_id)*100 AS home_to_search_rate
 FROM home_page_table h
 LEFT JOIN search_page_table s ON h.user_id = s.user_id;
 ```
 
-### 🔹 SQL Outputs
-- Home Users = **90,400**  
-- Search Users = **45,200**  
-- Payment Users = **6,030**  
-- Confirm Users = **452**  
-- Conversion Rates = **50% → 13.34% → 7.50% → 0.5% overall**  
+## Key Insights
 
----
+1. Only 0.5% of users complete a purchase → huge funnel inefficiency.
+2. Major drop-offs: Home → Search: 50% loss, Search → Payment: 86.7% loss, Payment → Confirmation: 92.5% loss
+3. Desktop users are underperforming (0.25%) vs. Mobile (1%).
+4. March 1st outage/bug caused a sudden funnel-wide conversion collapse.
+5. Gender does not significantly influence conversions.
 
+## Product Recommendations
 
+Based on these insights, the following actions are recommended to improve conversions and optimize the user journey:
 
-### Time Trend Analysis (Monthly Conversion)
+* **Checkout (Desktop):** Redesign the payment flow and investigate confirmation failures to increase conversion from 0.25% → 0.8%.
+* **Search → Payment:** Optimize cart UX, product discovery, and implement reminders to reduce mid-funnel leak and increase payment completion.
+* **Incident Handling:** Audit March 1 release logs and fix any bugs to prevent future funnel-wide drops.
+* **Mobile Optimization:** Push mobile-first campaigns and optimize search & payment experiences to leverage 4× higher conversion rates.
 
-Conversion rates fluctuate monthly.
+**This narrative approach connects data insights with actionable product roadmap decisions, demonstrating end-to-end product analytics thinking.**
 
-Around March 1st, a sharp drop in conversions occurred → possible bug release / A/B test failure.
+## Future Experiments
 
-✅ Insight: Technical or product changes in March severely impacted conversions
-- **March 1st outage/bug**: sudden funnel-wide conversion drop.  
+* Test checkout micro-interactions via A/B testing.
+* Personalize product recommendations for high-value users.
+* Track session replays/heatmaps to detect friction points.
 
+## Reference
 
-## 🔍 Segmentation Insights
-
-### By Gender
-Conversion rate for Female: 0.53%,
-and for Male: 0.47%
-- Conversions nearly identical → **gender not a significant factor**.
-
-
-- ### By Device
-
-Home Visitors: Desktop = 60k, Mobile = 30k.
-
-Final Conversion:
-
-Desktop → 0.25%
-
-Mobile → 1.00%
-
-Mobile converts 4x better than Desktop.
-
-fewer users are using mobile but **better conversion** and Desktop users drop off disproportionately, especially during Payment & Confirmation.
-
-
-
-## 📌 Key Findings
-- Only **0.5% of users** who visit the homepage complete a purchase.  
-- **Biggest leaks**:  
-  - Home → Search (50% drop-off)  
-  - Search → Payment (86.7% drop-off)  
-  - Payment → Confirmation (92.5% drop-off)
-  - Stage-wise conversions: 50% (Home → Search), 13.3% (Search → Payment), 7.5% (Payment → Confirmation), with an overall funnel conversion of just 0.5%. 
--  Segmentation analysis: Gender showed no impact, but Desktop users underperformed versus Mobile (0.25% and 1 %).
--   **Desktop users struggle more than Mobile users**, especially at checkout.  
-- A **critical outage on March 1st** caused funnel-wide collapse.  
-
----
-
-
-## Conclusion and Recommendations
-1). Fix Checkout Flow
-
-Desktop checkout needs urgent optimization.
-Investigate confirmation failures — possible UX issues, bugs, or payment gateway problems.
-
-2).Improve Search → Payment Conversion
-
-Users drop heavily at this stage → check product discovery, pricing, and cart usability.
-Implement cart abandonment reminders and run UX A/B tests.
-
-3).Investigate March Drop
-
-Analyze logs for March 1st release → likely a payment bug or broken flow.
-
-4).Leverage Mobile Strength
-
-Mobile conversions are 4x higher than Desktop.
-Push more campaigns on Mobile and further optimize mobile search & payments.
-
-5).Long-Term Improvements
-
-Add heatmaps/session replays for checkout behavior.
-Conduct A/B testing on payment pages.
-Introduce personalized product recommendations to improve cart-to-payment conversion.
-
----
+Medium case study on real-world e-commerce funnel analysis:
+[https://medium.com/@u3554364/funnel-analysis-of-e-commerce-website-with-real-data-e858e288ffb9](https://medium.com/@u3554364/funnel-analysis-of-e-commerce-website-with-real-data-e858e288ffb9)
 
 ## 🛠 Tools & Skills
 - **Python**: Pandas, Matplotlib, Plotly  
@@ -154,6 +125,5 @@ Introduce personalized product recommendations to improve cart-to-payment conver
 - **Data Storytelling**: Actionable insights & business recommendations  
 
 ---
-
 
 
